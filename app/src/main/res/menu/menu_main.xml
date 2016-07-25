@@ -1,0 +1,10 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.classic.clearprocesses.MainActivity">
+    <item android:id="@+id/action_kill"
+        android:title="killAllProcesses"
+        android:orderInCategory="80"
+        android:icon="@mipmap/ic_stop"
+        app:showAsAction="ifRoom" />
+</menu>
