@@ -118,9 +118,7 @@ public class MainActivity extends AppCompatActivity implements CommonRecyclerAda
                 process.startsWith("org.cyanogenmod") ||
                 process.startsWith("com.classic.clearprocesses") ||
                 process.startsWith("com.qualcomm") || //高通cpu监控进程
-                //process.startsWith(".esfm") || //未知
                 process.startsWith("com.huawei")
-
                 ) {
             return true;
         }
