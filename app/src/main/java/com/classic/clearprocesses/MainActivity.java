@@ -1,26 +1,21 @@
 package com.classic.clearprocesses;
 
-import android.Manifest;
 import android.app.ActivityManager;
 import android.content.Context;
-import android.os.Build;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.provider.Settings;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Toast;
 import com.classic.adapter.CommonRecyclerAdapter;
-import com.tbruyelle.rxpermissions.RxPermissions;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import rx.Observable;
@@ -43,6 +38,7 @@ public class MainActivity extends AppCompatActivity implements CommonRecyclerAda
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mAppContext = getApplicationContext();
+        mBackgroundProcesses = new ArrayList<>();
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         mRecyclerView = (RecyclerView) findViewById(R.id.main_rv);
@@ -54,31 +50,21 @@ public class MainActivity extends AppCompatActivity implements CommonRecyclerAda
         mProcessAdapter.setOnItemClickListener(this);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        assert fab != null;
         fab.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View view) {
-
-                if(android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.M){
-                    query();
-                    return;
-                }
-
-                RxPermissions.getInstance(mAppContext)
-                             .request(Manifest.permission.KILL_BACKGROUND_PROCESSES)
-                             .subscribe(new Action1<Boolean>() {
-                                 @Override public void call(Boolean granted) {
-                                     if (!granted) {
-                                         return;
-                                     }
-                                     query();
-                                 }
-                             });
+                query();
             }
         });
 
     }
 
+    @Override protected void onResume() {
+        super.onResume();
+        query();
+    }
+
     private void query(){
-        mBackgroundProcesses = new ArrayList<>();
         addSubscription(
                 Observable.create(new Observable.OnSubscribe<List<Parcelable>>() {
                     @Override public void call(Subscriber<? super List<Parcelable>> subscriber) {
@@ -102,7 +88,6 @@ public class MainActivity extends AppCompatActivity implements CommonRecyclerAda
                 if (verifyPackage(info.processName)) continue;
                 runningAppProcessInfos.add(info);
             }
-            Log.d("RunningAppProcessInfos", runningAppProcessInfos.toString());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -117,7 +102,6 @@ public class MainActivity extends AppCompatActivity implements CommonRecyclerAda
                 if (verifyPackage(serviceInfo.process)) continue;
                 runningServiceInfos.add(serviceInfo);
             }
-            Log.d("RunningServiceInfos", runningServiceInfos.toString());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -126,24 +110,34 @@ public class MainActivity extends AppCompatActivity implements CommonRecyclerAda
 
     private boolean verifyPackage(String process) {
         if (process.startsWith("com.android") ||
+                process.startsWith("com.eg.android") ||
                 process.startsWith("com.google") ||
                 process.startsWith("android") ||
                 process.startsWith("system") ||
                 process.startsWith("com.cyanogenmod") ||
                 process.startsWith("org.cyanogenmod") ||
-                process.startsWith("com.lbe") ||
-                process.startsWith("com.classic")) {
+                process.startsWith("com.classic.clearprocesses") ||
+                process.startsWith("com.qualcomm") || //高通cpu监控进程
+                //process.startsWith(".esfm") || //未知
+                process.startsWith("com.huawei")
+
+                ) {
             return true;
         }
         return false;
     }
 
-    private void killAllProcesses(){
+    private void showAllPackage(){
         addSubscription(
                 Observable.create(new Observable.OnSubscribe<Long>() {
                     @Override public void call(Subscriber<? super Long> subscriber) {
                         for (Parcelable item : mBackgroundProcesses){
-                            killProcess(item);
+                            showPackageDetail(item);
+                            try {
+                                Thread.sleep(1000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
                         }
                     }
                 }).subscribeOn(Schedulers.newThread())
@@ -151,8 +145,7 @@ public class MainActivity extends AppCompatActivity implements CommonRecyclerAda
                           .observeOn(AndroidSchedulers.mainThread())
                           .subscribe(new Action1<Long>() {
                               @Override public void call(Long aLong) {
-                                  Toast.makeText(mAppContext, "共清理进程"+mBackgroundProcesses.size()+"个", Toast
-                                          .LENGTH_SHORT).show();
+
                               }
                           })
         );
@@ -179,77 +172,31 @@ public class MainActivity extends AppCompatActivity implements CommonRecyclerAda
 
     @Override public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.action_kill) {
-            killAllProcesses();
+            showAllPackage();
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
-    private void killProcess(Parcelable item){
-        int pid = 0;
-        int uid = 0;
+    private void showPackageDetail(Parcelable item){
         String packageName = "";
         if(item instanceof ActivityManager.RunningAppProcessInfo){
-            pid = ((ActivityManager.RunningAppProcessInfo)item).pid;
-            uid = ((ActivityManager.RunningAppProcessInfo)item).uid;
             packageName = ((ActivityManager.RunningAppProcessInfo)item).processName;
         }else if(item instanceof ActivityManager.RunningServiceInfo){
-            pid = ((ActivityManager.RunningServiceInfo)item).pid;
-            uid = ((ActivityManager.RunningServiceInfo)item).uid;
             packageName = ((ActivityManager.RunningServiceInfo)item).process;
         }
-        //boolean isRoot = ShellUtil.checkRootPermission();
-        if(packageName.indexOf(":") == -1){
-            //ShellUtil.execCommand("adb shell", false);
-            String cmd = "adb shell am force-stop "+packageName;
-            try {
-                execCommand(cmd);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            //ShellUtil.CommandResult result = ShellUtil.execCommand(cmd, false);
-            //android.os.Process.killProcess(pid);
-            //Log.d("shell", cmd+","+result.toString());
+        if(packageName.contains(":")){
+            packageName = packageName.split(":")[0];
         }
-    }
-
-    public void execCommand(String command) throws IOException {
-        Runtime runtime = Runtime.getRuntime();
-        Process proc = runtime.exec(command);
-        try {
-            if (proc.waitFor() != 0) {
-                System.err.println("exit value = " + proc.exitValue());
-            }
-            BufferedReader in = new BufferedReader(new InputStreamReader(
-                    proc.getInputStream()));
-            StringBuffer stringBuffer = new StringBuffer();
-            String line = null;
-            while ((line = in.readLine()) != null) {
-                stringBuffer.append(line+"-");
-            }
-            System.out.println(stringBuffer.toString());
-
-        } catch (InterruptedException e) {
-            System.err.println(e);
-        }
+        Intent intent = new Intent();
+        intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        Uri uri = Uri.fromParts("package", packageName, null);
+        intent.setData(uri);
+        startActivity(intent);
     }
 
     @Override public void onItemClick(RecyclerView.ViewHolder viewHolder, View view, int position) {
         final Parcelable item = mBackgroundProcesses.get(position);
-
-        if(android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.M){
-            killProcess(item);
-            return;
-        }
-        RxPermissions.getInstance(mAppContext)
-                     .request(Manifest.permission.KILL_BACKGROUND_PROCESSES)
-                     .subscribe(new Action1<Boolean>() {
-                         @Override public void call(Boolean granted) {
-                             if (!granted) {
-                                 return;
-                             }
-                             killProcess(item);
-                         }
-                     });
+        showPackageDetail(item);
     }
 }

@@ -52,6 +52,6 @@ public class ProcessAdapter extends CommonRecyclerAdapter<Parcelable> implements
     }
 
     @Override public void call(List<Parcelable> parcelables) {
-        addAll(parcelables);
+        replaceAll(parcelables);
     }
 }
