@@ -11,18 +11,5 @@
     android:padding="@dimen/activity_horizontal_margin" >
 
     <TextView style="@style/ItemText"
-        android:id="@+id/item_type" />
-    <TextView style="@style/ItemText"
-        android:layout_marginTop="4dp"
-        android:id="@+id/item_process" />
-    <TextView style="@style/ItemText"
-        android:layout_marginTop="4dp"
-        android:id="@+id/item_pid" />
-    <TextView style="@style/ItemText"
-        android:layout_marginTop="4dp"
-        android:id="@+id/item_uid" />
-    <TextView style="@style/ItemText"
-        android:id="@+id/item_pkg_list"
-        android:layout_marginTop="4dp"
-        android:visibility="gone"/>
+        android:id="@+id/item_pkg" />
 </LinearLayout>
