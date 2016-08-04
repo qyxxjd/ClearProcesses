@@ -47,6 +47,7 @@ public class MainActivity extends AppCompatActivity implements CommonRecyclerAda
     private AccessibilityManager  mAccessibilityManager;
     private ArrayList<String>     mPackageList;
     private PackageAdapter        mPackageAdapter;
+    private boolean isDataChanged;
 
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -74,12 +75,14 @@ public class MainActivity extends AppCompatActivity implements CommonRecyclerAda
                 }
             }
         });
-
+        query();
     }
 
     @Override protected void onResume() {
         super.onResume();
-        query();
+        if(isDataChanged){
+            query();
+        }
     }
 
     private void query() {
@@ -89,6 +92,7 @@ public class MainActivity extends AppCompatActivity implements CommonRecyclerAda
                                         mPackageList.addAll(queryBackgroundProcesses());
                                         subscriber.onNext(mPackageList);
                                         subscriber.onCompleted();
+                                        isDataChanged = false;
                                     }
                                 })
                                 .subscribeOn(Schedulers.newThread())
@@ -138,7 +142,7 @@ public class MainActivity extends AppCompatActivity implements CommonRecyclerAda
                           .unsubscribeOn(Schedulers.io())
                           .observeOn(Schedulers.io())
                           .subscribe(new Subscriber<String>() {
-                              @Override public void onCompleted() { }
+                              @Override public void onCompleted() { isDataChanged = true; }
 
                               @Override public void onError(Throwable e) {
                                   e.printStackTrace();
@@ -174,11 +178,12 @@ public class MainActivity extends AppCompatActivity implements CommonRecyclerAda
     @Override public void onItemClick(RecyclerView.ViewHolder viewHolder, View view, int position) {
         if(checkEnabledAccessibilityService()){
             showPackageDetail(mPackageList.get(position));
+            mPackageAdapter.remove(position);
         }
     }
 
-    @Override protected void onStop() {
-        super.onStop();
+    @Override protected void onDestroy() {
+        super.onDestroy();
         if (null != mCompositeSubscription) {
             mCompositeSubscription.unsubscribe();
         }

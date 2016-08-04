@@ -19,17 +19,22 @@ public class HelpService extends AccessibilityService {
     private static final String       TEXT_FORCE_STOP = "强行停止";
     private static final String       TEXT_DETERMINE  = "确定";
     private static final CharSequence PACKAGE         = "com.android.settings";
-    private static final CharSequence CLASS_NAME      = "android.widget.Button";
+    private static final CharSequence NAME_APP_DETAILS  = "com.android.settings.applications.InstalledAppDetailsTop";
+    private static final CharSequence NAME_ALERT_DIALOG = "android.app.AlertDialog";
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN) @Override public void onAccessibilityEvent(final AccessibilityEvent event) {
         if(null == event || null == event.getSource()) { return; }
-        if(event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
-            && event.getPackageName().equals(PACKAGE)
-                /*&& event.getClassName().equals(CLASS_NAME)*/ ){
-
-            simulationClick(event, TEXT_FORCE_STOP);
-            simulationClick(event, TEXT_DETERMINE);
-            performGlobalAction(GLOBAL_ACTION_BACK);
+        if(event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&
+                event.getPackageName().equals(PACKAGE)){
+            final CharSequence className = event.getClassName();
+            if(className.equals(NAME_APP_DETAILS)){
+                simulationClick(event, TEXT_FORCE_STOP);
+                performGlobalAction(GLOBAL_ACTION_BACK);
+            }
+            if(className.equals(NAME_ALERT_DIALOG)){
+                simulationClick(event, TEXT_DETERMINE);
+                performGlobalAction(GLOBAL_ACTION_BACK);
+            }
         }
     }
 
