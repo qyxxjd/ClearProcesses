@@ -37,6 +37,7 @@ public class MainActivity extends AppCompatActivity implements CommonRecyclerAda
             "org.cyanogenmod",
             "com.qualcomm", //高通cpu监控进程
             "com.huawei",
+            "com.sohu.inputmethod.sogou",
             CURRENT_PACKAGE
     };
 

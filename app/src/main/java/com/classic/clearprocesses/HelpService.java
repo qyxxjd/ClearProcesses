@@ -22,6 +22,7 @@ public class HelpService extends AccessibilityService {
     private static final CharSequence NAME_APP_DETAILS  = "com.android.settings.applications.InstalledAppDetailsTop";
     private static final CharSequence NAME_ALERT_DIALOG = "android.app.AlertDialog";
 
+    private boolean isAppDetail;
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN) @Override public void onAccessibilityEvent(final AccessibilityEvent event) {
         if(null == event || null == event.getSource()) { return; }
         if(event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&
@@ -30,10 +31,12 @@ public class HelpService extends AccessibilityService {
             if(className.equals(NAME_APP_DETAILS)){
                 simulationClick(event, TEXT_FORCE_STOP);
                 performGlobalAction(GLOBAL_ACTION_BACK);
+                isAppDetail = true;
             }
-            if(className.equals(NAME_ALERT_DIALOG)){
+            if(isAppDetail && className.equals(NAME_ALERT_DIALOG)){
                 simulationClick(event, TEXT_DETERMINE);
                 performGlobalAction(GLOBAL_ACTION_BACK);
+                isAppDetail = false;
             }
         }
     }
