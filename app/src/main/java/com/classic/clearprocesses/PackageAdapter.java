@@ -24,7 +24,11 @@ public class PackageAdapter extends CommonRecyclerAdapter<String> implements Act
         helper.setText(R.id.item_pkg, item);
     }
 
-    @Override public void call(List<String> Strings) {
-        replaceAll(Strings);
+    @Override public void call(List<String> items) {
+        if(null != items && items.size() > 0){
+            replaceAll(items);
+        } else {
+            clear();
+        }
     }
 }
