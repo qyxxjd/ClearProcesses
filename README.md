@@ -158,11 +158,13 @@ private void showPackageDetail(String packageName){
 }
 ```
 
-##关于
+## 关于
+
 * Blog: [http://blog.csdn.net/qy1387](http://blog.csdn.net/qy1387)
 * Email: [pgliubin@gmail.com](http://mail.qq.com/cgi-bin/qm_share?t=qm_mailme&email=pgliubin@gmail.com)
 
-##License
+## License
+
 ```
 Copyright 2015 classic
 
